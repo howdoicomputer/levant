@@ -40,6 +40,7 @@ func RenderTemplate(templateFile string, variableFiles []string, addr string, fl
 	t.flagVariables = flagVars
 	t.jobTemplateFile = templateFile
 	t.variableFiles = variableFiles
+	t.consulAddr = addr
 
 	c, err := client.NewConsulClient(addr)
 	if err != nil {

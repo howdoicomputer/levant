@@ -16,6 +16,7 @@ type tmpl struct {
 	flagVariables   *map[string]interface{}
 	jobTemplateFile string
 	variableFiles   []string
+	consulAddr      string
 }
 
 const (
@@ -32,6 +33,6 @@ func (t *tmpl) newTemplate() *template.Template {
 	tmpl := template.New("jobTemplate")
 	tmpl.Delims(leftDelim, rightDelim)
 	tmpl.Option("missingkey=zero")
-	tmpl.Funcs(funcMap(t.consulClient))
+	tmpl.Funcs(funcMap(t))
 	return tmpl
 }

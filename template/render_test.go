@@ -4,7 +4,9 @@
 package template
 
 import (
+	"bytes"
 	"os"
+	"strings"
 	"testing"
 
 	nomad "github.com/hashicorp/nomad/api"
@@ -117,5 +119,22 @@ func TestTemplater_RenderTemplate(t *testing.T) {
 	}
 	if *job.TaskGroups[0].Name != testEnvValue {
 		t.Fatalf("expected %s but got %v", testEnvValue, *job.TaskGroups[0].Name)
+	}
+
+	// Test recursive templating.
+	tpl, err := RenderTemplate("test-fixtures/recursive_template.nomad", []string{"test-fixtures/test.yaml"}, "", &fVars)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out := new(bytes.Buffer)
+	_, err = tpl.WriteTo(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	marker := "avranakern"
+	if !strings.Contains(out.String(), marker) {
+		t.Fatalf("expected rendered template to contain '%s'", marker)
 	}
 }

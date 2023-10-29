@@ -4,6 +4,7 @@
 package template
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,13 +26,14 @@ import (
 
 // funcMap builds the template functions and passes the consulClient where this
 // is required.
-func funcMap(consulClient *consul.Client) template.FuncMap {
+func funcMap(t *tmpl) template.FuncMap {
 	r := template.FuncMap{
-		"consulKey":          consulKeyFunc(consulClient),
-		"consulKeyExists":    consulKeyExistsFunc(consulClient),
-		"consulKeyOrDefault": consulKeyOrDefaultFunc(consulClient),
+		"consulKey":          consulKeyFunc(t.consulClient),
+		"consulKeyExists":    consulKeyExistsFunc(t.consulClient),
+		"consulKeyOrDefault": consulKeyOrDefaultFunc(t.consulClient),
 		"env":                envFunc(),
 		"fileContents":       fileContents(),
+		"fileContentsTmpl":   fileContentsTmpl(t),
 		"loop":               loop,
 		"parseBool":          parseBool,
 		"parseFloat":         parseFloat,
@@ -290,6 +292,24 @@ func envFunc() func(string) (string, error) {
 			return "", nil
 		}
 		return os.Getenv(s), nil
+	}
+}
+
+func fileContentsTmpl(t *tmpl) func(string) (string, error) {
+	return func(s string) (string, error) {
+		if s == "" {
+			return "", nil
+		}
+
+		tmpl, err := RenderTemplate(s, t.variableFiles, t.consulAddr, t.flagVariables)
+		if err != nil {
+			return "", err
+		}
+
+		out := new(bytes.Buffer)
+		tmpl.WriteTo(out)
+
+		return out.String(), nil
 	}
 }
 
